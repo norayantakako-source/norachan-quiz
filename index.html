@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -19,9 +18,11 @@ html
     }
 
     .game {
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 24px;
+     max-width: 420px;
+     margin: 0 auto;
+     padding: 12px 18px;
+     min-height: 100vh;
+     box-sizing: border-box;
     }
 
     h1 {
@@ -30,21 +31,21 @@ html
     }
 
     .message {
-      background: #fff;
-      border: 3px solid #d8a85f;
-      border-radius: 18px;
-      padding: 14px;
-      margin: 16px 0;
-      font-size: 16px;
-      line-height: 1.7;
+background: #fff;
+  border: 3px solid #d8a85f;
+  border-radius: 18px;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 15px;
+  line-height: 1.5;
     }
 
     .norachan {
-      width: 220px;
-      max-width: 80%;
-      cursor: pointer;
-      user-select: none;
-      transition: transform 0.1s;
+ width: 150px;
+  max-width: 65%;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s;
     }
 
     .norachan:active {
@@ -129,21 +130,19 @@ html
       onclick="tapNora()"
     />
 
-    <div>
+   <div id="topButtons">
+  <button onclick="startBeginner()" id="beginnerButton">
+  🌱 はじめて編
+</button>
+  <button id="nextButton" disabled>🔒 次のステージ</button>
+<button onclick="showCollection()">
+  🏆 バッジコレクション
+</button>
+</div>
 
-      <button onclick="startBeginner()">
-        🌱 はじめて編
-      </button>
+<div id="quizArea"></div>
 
-      <button id="nextButton" disabled>
-        🔒 次のステージ
-      </button>
-
-    </div>
-
-    <div id="quizArea"></div>
-
-    <div class="collection">
+<div class="collection" id="collectionArea" style="display:none;">
 
       <h2>バッジコレクション</h2>
 
@@ -158,6 +157,10 @@ html
       <div class="item locked">
         🔒 キッチン編
       </div>
+
+      <button onclick="hideCollection()">
+        🏠 トップへ戻る
+      </button>
 
     </div>
 
@@ -565,11 +568,7 @@ html
   }
 ];
 
-    const shuffledQuizzes =
-      [...quizzes].sort(() => Math.random() - 0.5);
-
-    const selectedQuizzes =
-      shuffledQuizzes.slice(0, 10);
+    let selectedQuizzes = [];
 
     function shuffleArray(array) {
 
@@ -580,6 +579,8 @@ html
 
     let currentQuiz = 0;
     let score = 0;
+  let bestScore = 0;
+let bestBadge = "";
 
     function jumpNora() {
 
@@ -610,53 +611,53 @@ html
         "まずは、はじめて編から始めるにゃ🐾";
     }
 
-    function startBeginner() {
+    function startBeginner(){
 
-      currentQuiz = 0;
-      score = 0;
+  currentQuiz = 0;
+  score = 0;
 
-      showQuiz();
-    }
+  selectedQuizzes =
+    [...quizzes].sort(() => Math.random() - 0.5).slice(0, 10);
 
-    function showQuiz() {
+  document.getElementById("topButtons").style.display = "none";
+  document.getElementById("collectionArea").style.display = "none";
 
-      changeNora(normalNora);
+  showQuiz();
+}
 
-      const quiz =
-        selectedQuizzes[currentQuiz];
+function showQuiz() {
 
-      const shuffledChoices =
-        shuffleArray(
-          quiz.choices.map((choice, index) => ({
-            text: choice,
-            correct: index === quiz.answer
-          }))
-        );
+  changeNora(normalNora);
 
-      let html = `
-        <div class="message">
-          <strong>
-            Q${currentQuiz + 1}
-          </strong>
-          <br><br>
-          ${quiz.question}
-        </div>
-      `;
+  const quiz =
+    selectedQuizzes[currentQuiz];
 
-      shuffledChoices.forEach((choice) => {
+  const shuffledChoices =
+    shuffleArray(
+      quiz.choices.map((choice, index) => ({
+        text: choice,
+        correct: index === quiz.answer
+      }))
+    );
 
-        html += `
-          <button
-            onclick="answerQuiz(${choice.correct})"
-          >
-            ${choice.text}
-          </button>
-        `;
-      });
+document.getElementById("message").innerHTML =
+  "<strong>Q" + (currentQuiz + 1) + "</strong><br><br>" +
+  quiz.question;
 
-      document.getElementById("quizArea").innerHTML =
-        html;
-    }
+  let html = "";
+
+  shuffledChoices.forEach((choice) => {
+
+    html += `
+      <button onclick="answerQuiz(${choice.correct})">
+        ${choice.text}
+      </button>
+    `;
+  });
+
+  document.getElementById("quizArea").innerHTML =
+    html;
+}
 
     function answerQuiz(isCorrect) {
 
@@ -760,18 +761,81 @@ html
 
       document.getElementById("beginnerBadge")
         .classList.remove("locked");
+if(finalScore > bestScore){
 
-      document.getElementById("quizArea").innerHTML =
-        "";
+  bestScore = finalScore;
+
+  bestBadge = result.replace("金バッジ", "")
+                  .replace("銀バッジ", "")
+                  .replace("銅バッジ", "");
+
+  document.getElementById("beginnerButton")
+    .innerHTML =
+    "🌱 はじめて編<br>" +
+    "最高：" +
+    bestScore +
+    "点 " +
+    bestBadge;
+}
+
+    document.getElementById("quizArea").innerHTML = `
+
+  <button onclick="goTop()">
+    🏠 トップへ戻る
+  </button>
+
+  <button onclick="startBeginner()">
+    🔄 もう一度解く
+  </button>
+
+`;
 
       beginnerClear = true;
 
-      document.getElementById("nextButton").disabled =
-        false;
+document.getElementById("nextButton").textContent =
+  "✨ 次のステージへ";
 
-      document.getElementById("nextButton").textContent =
-        "✨ 次のステージへ";
-    }
+}
+
+function goTop() {
+
+  document.getElementById("message").innerHTML =
+    "のらやへようこそ！<br>" +
+    "一緒にのらやを勉強しようね🐈‍⬛";
+
+  document.getElementById("quizArea").innerHTML = "";
+
+  document.getElementById("topButtons").style.display =
+    "block";
+
+  document.getElementById("collectionArea").style.display =
+    "none";
+
+  changeNora(normalNora);
+}
+function showCollection() {
+  document.getElementById("topButtons").style.display = "none";
+  document.getElementById("quizArea").innerHTML = "";
+
+  document.getElementById("message").innerHTML =
+    "集めたバッジを確認するにゃ🏆";
+
+  document.getElementById("collectionArea").style.display = "block";
+
+  changeNora(normalNora);
+}
+
+function hideCollection() {
+  document.getElementById("collectionArea").style.display = "none";
+
+  document.getElementById("topButtons").style.display = "block";
+
+  document.getElementById("message").innerHTML =
+    "のらやへようこそ！<br>" +
+    "一緒にのらやを勉強しようね🐈‍⬛";
+
+  changeNora(normalNora);
+}
 
   </script>
 
