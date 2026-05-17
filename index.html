@@ -8,7 +8,8 @@
   <title>のらちゃんクイズ</title>
 
   <link rel="stylesheet" href="style.css">
-  <script src="questions.js" defer></script>
+  <script src="questions-beginner.js" defer></script>
+  <script src="questions-hall.js" defer></script>
   <script src="quiz.js" defer></script>
 </head>
 
@@ -34,9 +35,13 @@
         🌱 はじめて編
       </button>
 
-      <button id="nextButton" disabled>
-        🔒 次のステージ
-      </button>
+     <button
+      id="hallButton"
+      onclick="startHall()"
+      disabled
+      >
+  🔒 ホール編
+   </button>
 
       <button onclick="showCollection()">
         🏆 バッジコレクション
@@ -52,11 +57,11 @@
         🔒 はじめて編 未クリア
       </div>
 
-      <div class="item locked">
-        🔒 ホール編
+      <div class="item locked" id="hallBadge">
+        🔒 ホール編 未クリア
       </div>
 
-      <div class="item locked">
+      <div class="item locked" id="kitchenBadge">
         🔒 キッチン編
       </div>
 

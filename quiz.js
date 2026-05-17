@@ -1,60 +1,81 @@
 const normalNora = "Aのらノーマル.png";
-    const happyNora = "Bのら万歳.png";
-    const worryNora = "Eのら焦り.png";
+const happyNora = "Bのら万歳.png";
+const worryNora = "Eのら焦り.png";
 
-    let beginnerClear = false;
+let selectedQuizzes = [];
+let currentQuiz = 0;
+let score = 0;
 
+let currentStage = "beginner";
+let currentStageLabel = "はじめて編";
+let retryFunctionName = "startBeginner";
 
-     let selectedQuizzes = [];
+const bestRecords = JSON.parse(
+  localStorage.getItem("bestRecords")
+) || {
+  beginner: { score: 0, badge: "" },
+  hall: { score: 0, badge: "" }
+};
 
-    function shuffleArray(array) {
+function shuffleArray(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
 
-      return [...array].sort(
-        () => Math.random() - 0.5
-      );
-    }
+function jumpNora() {
+  const nora = document.getElementById("norachan");
+  nora.classList.remove("jump");
+  void nora.offsetWidth;
+  nora.classList.add("jump");
+}
 
-    let currentQuiz = 0;
-    let score = 0;
-  let bestScore = 0;
-let bestBadge = "";
+function changeNora(imageName) {
+  document.getElementById("norachan").src = imageName;
+}
 
-    function jumpNora() {
+function tapNora() {
+  jumpNora();
+  changeNora(normalNora);
 
-      const nora =
-        document.getElementById("norachan");
+  document.getElementById("message").innerHTML =
+    "のらやへようこそ！<br>" +
+    "まずは、はじめて編から始めるにゃ🐾";
+}
 
-      nora.classList.remove("jump");
+function startBeginner() {
+  startQuiz({
+    stage: "beginner",
+    label: "はじめて編",
+    quizzes: beginnerQuizzes,
+    count: 10,
+    retry: "startBeginner"
+  });
+}
 
-      void nora.offsetWidth;
+function startHall() {
+  startQuiz({
+    stage: "hall",
+    label: "ホール編",
+    quizzes: hallQuizzes,
+    count: 20,
+    retry: "startHall"
+  });
+}
 
-      nora.classList.add("jump");
-    }
+function startQuiz(settings) {
+  if (!settings.quizzes || settings.quizzes.length === 0) {
+    document.getElementById("message").innerHTML =
+      settings.label + "の問題はまだ登録されていないにゃ🐾";
+    return;
+  }
 
-    function changeNora(imageName) {
-
-      document.getElementById("norachan").src =
-        imageName;
-    }
-
-    function tapNora() {
-
-      jumpNora();
-
-      changeNora(normalNora);
-
-      document.getElementById("message").innerHTML =
-        "のらやへようこそ！<br>" +
-        "まずは、はじめて編から始めるにゃ🐾";
-    }
-
-    function startBeginner(){
+  currentStage = settings.stage;
+  currentStageLabel = settings.label;
+  retryFunctionName = settings.retry;
 
   currentQuiz = 0;
   score = 0;
 
-  selectedQuizzes =
-    [...quizzes].sort(() => Math.random() - 0.5).slice(0, 10);
+  selectedQuizzes = shuffleArray(settings.quizzes).slice(0, settings.count);
 
   document.getElementById("topButtons").style.display = "none";
   document.getElementById("collectionArea").style.display = "none";
@@ -63,28 +84,24 @@ let bestBadge = "";
 }
 
 function showQuiz() {
-
   changeNora(normalNora);
 
-  const quiz =
-    selectedQuizzes[currentQuiz];
+  const quiz = selectedQuizzes[currentQuiz];
 
-  const shuffledChoices =
-    shuffleArray(
-      quiz.choices.map((choice, index) => ({
-        text: choice,
-        correct: index === quiz.answer
-      }))
-    );
+  const shuffledChoices = shuffleArray(
+    quiz.choices.map((choice, index) => ({
+      text: choice,
+      correct: index === quiz.answer
+    }))
+  );
 
-document.getElementById("message").innerHTML =
-  "<strong>Q" + (currentQuiz + 1) + "</strong><br><br>" +
-  quiz.question;
+  document.getElementById("message").innerHTML =
+    "<strong>Q" + (currentQuiz + 1) + "</strong><br><br>" +
+    quiz.question;
 
   let html = "";
 
   shuffledChoices.forEach((choice) => {
-
     html += `
       <button onclick="answerQuiz(${choice.correct})">
         ${choice.text}
@@ -92,164 +109,175 @@ document.getElementById("message").innerHTML =
     `;
   });
 
+  document.getElementById("quizArea").innerHTML = html;
+}
+
+function answerQuiz(isCorrect) {
+  const quiz = selectedQuizzes[currentQuiz];
+  let resultHTML = "";
+
+  if (isCorrect) {
+    score += 100;
+    changeNora(happyNora);
+    jumpNora();
+
+    resultHTML = `
+      <div class="message">
+        ⭕ 正解にゃ！<br><br>
+        ${quiz.explanation}
+      </div>
+    `;
+  } else {
+    changeNora(worryNora);
+    jumpNora();
+
+    resultHTML = `
+      <div class="message">
+        ❌ おしいにゃ！<br><br>
+        ${quiz.explanation}
+      </div>
+    `;
+  }
+
   document.getElementById("quizArea").innerHTML =
-    html;
+    resultHTML + `<button onclick="nextQuiz()">次へ</button>`;
 }
 
-    function answerQuiz(isCorrect) {
+function nextQuiz() {
+  currentQuiz++;
 
-      const quiz =
-        selectedQuizzes[currentQuiz];
+  if (currentQuiz < selectedQuizzes.length) {
+    showQuiz();
+  } else {
+    finishQuiz();
+  }
+}
 
-      let resultHTML = "";
+function getBadge(finalScore) {
+  if (finalScore === 100) {
+    return { result: "🥇 金バッジ", shortBadge: "🥇" };
+  }
 
-      if(isCorrect){
+  if (finalScore >= 90) {
+    return { result: "🥈 銀バッジ", shortBadge: "🥈" };
+  }
 
-        score += 100;
+  if (finalScore >= 80) {
+    return { result: "🥉 銅バッジ", shortBadge: "🥉" };
+  }
 
-        changeNora(happyNora);
+  return { result: "🌱 また挑戦にゃ", shortBadge: "🌱" };
+}
 
-        jumpNora();
+function finishQuiz() {
+  const finalScore = Math.floor(score / selectedQuizzes.length);
+  const badge = getBadge(finalScore);
 
-        resultHTML = `
-          <div class="message">
-            ⭕ 正解にゃ！<br><br>
-            ${quiz.explanation}
-          </div>
-        `;
+  if (finalScore >= 80) {
+    changeNora(happyNora);
+  } else {
+    changeNora(worryNora);
+  }
 
-      } else {
+  document.getElementById("message").innerHTML =
+    currentStageLabel + "クリア！<br>" +
+    finalScore + "点！<br>" +
+    badge.result + " 獲得にゃ✨";
 
-        changeNora(worryNora);
+  updateBadgeCollection(finalScore, badge);
+  updateBestRecord(finalScore, badge);
 
-        jumpNora();
+  document.getElementById("quizArea").innerHTML = `
+    <button onclick="goTop()">
+      🏠 トップへ戻る
+    </button>
 
-        resultHTML = `
-          <div class="message">
-            ❌ おしいにゃ！<br><br>
-            ${quiz.explanation}
-          </div>
-        `;
-      }
+    <button onclick="${retryFunctionName}()">
+      🔄 もう一度解く
+    </button>
+  `;
 
-      document.getElementById("quizArea").innerHTML =
-        resultHTML +
-        `<button onclick="nextQuiz()">次へ</button>`;
+  if (currentStage === "beginner") {
+    unlockHall();
+  }
+}
+
+function updateBadgeCollection(finalScore, badge) {
+  const badgeText = badge.shortBadge + " " + currentStageLabel + " " + badge.result.replace(/^🥇 |^🥈 |^🥉 /, "");
+
+  if (currentStage === "beginner") {
+    const beginnerBadge = document.getElementById("beginnerBadge");
+    beginnerBadge.textContent = badgeText;
+    beginnerBadge.classList.remove("locked");
+  }
+
+  if (currentStage === "hall") {
+    const hallBadge = document.getElementById("hallBadge");
+    if (hallBadge) {
+      hallBadge.textContent = badgeText;
+      hallBadge.classList.remove("locked");
     }
-
-    function nextQuiz() {
-
-      currentQuiz++;
-
-      if(currentQuiz < selectedQuizzes.length){
-
-        showQuiz();
-
-      } else {
-
-        finishQuiz();
-      }
-    }
-
-    function finishQuiz() {
-
-      let result = "";
-      let badgeText = "";
-
-      const finalScore =
-        Math.floor(score / selectedQuizzes.length);
-
-      if(finalScore === 100){
-
-        result = "🥇 金バッジ";
-        badgeText = "🥇 はじめて編 金バッジ";
-
-        changeNora(happyNora);
-
-      } else if(finalScore >= 90){
-
-        result = "🥈 銀バッジ";
-        badgeText = "🥈 はじめて編 銀バッジ";
-
-        changeNora(happyNora);
-
-      } else if(finalScore >= 80){
-
-        result = "🥉 銅バッジ";
-        badgeText = "🥉 はじめて編 銅バッジ";
-
-        changeNora(happyNora);
-
-      } else {
-
-        result = "🌱 また挑戦にゃ";
-        badgeText = "🌱 はじめて編";
-
-        changeNora(worryNora);
-      }
-
-      document.getElementById("message").innerHTML =
-        "はじめて編クリア！<br>" +
-        finalScore + "点！<br>" +
-        result + " 獲得にゃ✨";
-
-      document.getElementById("beginnerBadge")
-        .textContent = badgeText;
-
-      document.getElementById("beginnerBadge")
-        .classList.remove("locked");
-if(finalScore > bestScore){
-
-  bestScore = finalScore;
-
-  bestBadge = result.replace("金バッジ", "")
-                  .replace("銀バッジ", "")
-                  .replace("銅バッジ", "");
-
-  document.getElementById("beginnerButton")
-    .innerHTML =
-    "🌱 はじめて編<br>" +
-    "最高：" +
-    bestScore +
-    "点 " +
-    bestBadge;
+  }
 }
 
-    document.getElementById("quizArea").innerHTML = `
+function updateBestRecord(finalScore, badge) {
+  if (finalScore <= bestRecords[currentStage].score) {
+    return;
+  }
 
-  <button onclick="goTop()">
-    🏠 トップへ戻る
-  </button>
+  bestRecords[currentStage].score = finalScore;
+  bestRecords[currentStage].badge = badge.shortBadge;
 
-  <button onclick="startBeginner()">
-    🔄 もう一度解く
-  </button>
+  if (currentStage === "beginner") {
+    document.getElementById("beginnerButton").innerHTML =
+      "🌱 はじめて編<br>" +
+      "最高：" + finalScore + "点 " + badge.shortBadge;
+  }
 
-`;
-
-      beginnerClear = true;
-
-document.getElementById("nextButton").textContent =
-  "✨ 次のステージへ";
+  if (currentStage === "hall") {
+    document.getElementById("hallButton").innerHTML =
+      "🍜 ホール編<br>" +
+      "最高：" + finalScore + "点 " + badge.shortBadge;
+  }
+localStorage.setItem(
+  "bestRecords",
+  JSON.stringify(bestRecords)
+);
 
 }
 
+function unlockHall() {
+  const hallButton = document.getElementById("hallButton");
+
+  if (!hallButton) {
+    return;
+  }
+
+  hallButton.disabled = false;
+
+  localStorage.setItem("hallUnlocked", "true");
+
+  if (bestRecords.hall.score > 0) {
+    hallButton.innerHTML =
+      "🍜 ホール編<br>" +
+      "最高：" + bestRecords.hall.score + "点 " + bestRecords.hall.badge;
+  } else {
+    hallButton.innerHTML = "🍜 ホール編";
+  }
+}
 function goTop() {
-
   document.getElementById("message").innerHTML =
     "のらやへようこそ！<br>" +
     "一緒にのらやを勉強しようね🐈‍⬛";
 
   document.getElementById("quizArea").innerHTML = "";
 
-  document.getElementById("topButtons").style.display =
-    "block";
-
-  document.getElementById("collectionArea").style.display =
-    "none";
+  document.getElementById("topButtons").style.display = "block";
+  document.getElementById("collectionArea").style.display = "none";
 
   changeNora(normalNora);
 }
+
 function showCollection() {
   document.getElementById("topButtons").style.display = "none";
   document.getElementById("quizArea").innerHTML = "";
@@ -264,7 +292,6 @@ function showCollection() {
 
 function hideCollection() {
   document.getElementById("collectionArea").style.display = "none";
-
   document.getElementById("topButtons").style.display = "block";
 
   document.getElementById("message").innerHTML =
@@ -273,3 +300,17 @@ function hideCollection() {
 
   changeNora(normalNora);
 }
+window.onload = function () {
+  const hallUnlocked =
+    localStorage.getItem("hallUnlocked");
+
+  if (hallUnlocked === "true") {
+    unlockHall();
+  }
+
+  if (bestRecords.beginner.score > 0) {
+    document.getElementById("beginnerButton").innerHTML =
+      "🌱 はじめて編<br>" +
+      "最高：" + bestRecords.beginner.score + "点 " + bestRecords.beginner.badge;
+  }
+};

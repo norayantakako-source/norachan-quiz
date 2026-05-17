@@ -4,16 +4,18 @@
 
 - index.html：画面の骨組み
 - style.css：文字サイズ、色、余白などの見た目
-- questions.js：はじめて編の問題データ
+- questions-beginner.js：はじめて編の問題データ
+- questions-hall.js：ホール編の問題データ
 - quiz.js：クイズの動き、点数、バッジ表示
 
 ## GitHubに置くもの
 
-この4ファイルと、画像3枚を同じ場所にアップロードしてください。
+この5ファイルと、画像3枚を同じ場所にアップロードしてください。
 
 - index.html
 - style.css
-- questions.js
+- questions-beginner.js
+- questions-hall.js
 - quiz.js
 - Aのらノーマル.png
 - Bのら万歳.png
@@ -21,18 +23,22 @@
 
 ## よく触る場所
 
-### 問題を増やす
-questions.js を編集します。
+### はじめて編の問題を増やす
+questions-beginner.js を編集します。
+
+### ホール編の問題を増やす
+questions-hall.js を編集します。
 
 ### 文字サイズを変える
 style.css を編集します。
 
 ### 出題数を変える
-quiz.js のこの部分を変更します。
+quiz.js の startBeginner / startHall を編集します。
 
 ```js
-selectedQuizzes =
-  [...quizzes].sort(() => Math.random() - 0.5).slice(0, 10);
-```
+// はじめて編は10問
+.slice(0, 10)
 
-10問なら `slice(0, 10)`、20問なら `slice(0, 20)` です。
+// ホール編は20問
+.slice(0, 20)
+```
