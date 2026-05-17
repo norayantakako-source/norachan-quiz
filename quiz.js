@@ -6,6 +6,8 @@ let selectedQuizzes = [];
 let currentQuiz = 0;
 let score = 0;
 
+let wrongQuizzes = [];
+
 let currentStage = "beginner";
 let currentStageLabel = "はじめて編";
 let retryFunctionName = "startBeginner";
@@ -62,6 +64,7 @@ function startHall() {
 }
 
 function startQuiz(settings) {
+
   if (!settings.quizzes || settings.quizzes.length === 0) {
     document.getElementById("message").innerHTML =
       settings.label + "の問題はまだ登録されていないにゃ🐾";
@@ -74,8 +77,10 @@ function startQuiz(settings) {
 
   currentQuiz = 0;
   score = 0;
+  wrongQuizzes = [];
 
-  selectedQuizzes = shuffleArray(settings.quizzes).slice(0, settings.count);
+  selectedQuizzes =
+    shuffleArray(settings.quizzes).slice(0, settings.count);
 
   document.getElementById("topButtons").style.display = "none";
   document.getElementById("collectionArea").style.display = "none";
@@ -84,6 +89,7 @@ function startQuiz(settings) {
 }
 
 function showQuiz() {
+
   changeNora(normalNora);
 
   const quiz = selectedQuizzes[currentQuiz];
@@ -113,11 +119,15 @@ function showQuiz() {
 }
 
 function answerQuiz(isCorrect) {
+
   const quiz = selectedQuizzes[currentQuiz];
+
   let resultHTML = "";
 
   if (isCorrect) {
+
     score += 100;
+
     changeNora(happyNora);
     jumpNora();
 
@@ -127,7 +137,11 @@ function answerQuiz(isCorrect) {
         ${quiz.explanation}
       </div>
     `;
+
   } else {
+
+    wrongQuizzes.push(quiz);
+
     changeNora(worryNora);
     jumpNora();
 
@@ -140,10 +154,12 @@ function answerQuiz(isCorrect) {
   }
 
   document.getElementById("quizArea").innerHTML =
-    resultHTML + `<button onclick="nextQuiz()">次へ</button>`;
+    resultHTML +
+    `<button onclick="nextQuiz()">次へ</button>`;
 }
 
 function nextQuiz() {
+
   currentQuiz++;
 
   if (currentQuiz < selectedQuizzes.length) {
@@ -154,23 +170,39 @@ function nextQuiz() {
 }
 
 function getBadge(finalScore) {
+
   if (finalScore === 100) {
-    return { result: "🥇 金バッジ", shortBadge: "🥇" };
+    return {
+      result: "🥇 金バッジ",
+      shortBadge: "🥇"
+    };
   }
 
   if (finalScore >= 90) {
-    return { result: "🥈 銀バッジ", shortBadge: "🥈" };
+    return {
+      result: "🥈 銀バッジ",
+      shortBadge: "🥈"
+    };
   }
 
   if (finalScore >= 80) {
-    return { result: "🥉 銅バッジ", shortBadge: "🥉" };
+    return {
+      result: "🥉 銅バッジ",
+      shortBadge: "🥉"
+    };
   }
 
-  return { result: "🌱 また挑戦にゃ", shortBadge: "🌱" };
+  return {
+    result: "🌱 また挑戦にゃ",
+    shortBadge: "🌱"
+  };
 }
 
 function finishQuiz() {
-  const finalScore = Math.floor(score / selectedQuizzes.length);
+
+  const finalScore =
+    Math.floor(score / selectedQuizzes.length);
+
   const badge = getBadge(finalScore);
 
   if (finalScore >= 80) {
@@ -184,10 +216,13 @@ function finishQuiz() {
     finalScore + "点！<br>" +
     badge.result + " 獲得にゃ✨";
 
-  updateBadgeCollection(finalScore, badge);
-  updateBestRecord(finalScore, badge);
+  if (currentStage !== "review") {
+    updateBadgeCollection(finalScore, badge);
+    updateBestRecord(finalScore, badge);
+  }
 
   document.getElementById("quizArea").innerHTML = `
+
     <button onclick="goTop()">
       🏠 トップへ戻る
     </button>
@@ -195,6 +230,13 @@ function finishQuiz() {
     <button onclick="${retryFunctionName}()">
       🔄 もう一度解く
     </button>
+
+    ${wrongQuizzes.length > 0 ? `
+      <button onclick="startReview()">
+        📚 間違えた問題を復習
+      </button>
+    ` : ""}
+
   `;
 
   if (currentStage === "beginner") {
@@ -202,17 +244,50 @@ function finishQuiz() {
   }
 }
 
+function startReview() {
+
+  if (wrongQuizzes.length === 0) {
+    return;
+  }
+
+  selectedQuizzes = [...wrongQuizzes];
+
+  currentQuiz = 0;
+  score = 0;
+
+  currentStage = "review";
+  currentStageLabel = "復習";
+  retryFunctionName = "startReview";
+
+  wrongQuizzes = [];
+
+  document.getElementById("topButtons").style.display = "none";
+  document.getElementById("collectionArea").style.display = "none";
+
+  showQuiz();
+}
+
 function updateBadgeCollection(finalScore, badge) {
-  const badgeText = badge.shortBadge + " " + currentStageLabel + " " + badge.result.replace(/^🥇 |^🥈 |^🥉 /, "");
+
+  const badgeText =
+    badge.shortBadge + " " +
+    currentStageLabel + " " +
+    badge.result.replace(/^🥇 |^🥈 |^🥉 /, "");
 
   if (currentStage === "beginner") {
-    const beginnerBadge = document.getElementById("beginnerBadge");
+
+    const beginnerBadge =
+      document.getElementById("beginnerBadge");
+
     beginnerBadge.textContent = badgeText;
     beginnerBadge.classList.remove("locked");
   }
 
   if (currentStage === "hall") {
-    const hallBadge = document.getElementById("hallBadge");
+
+    const hallBadge =
+      document.getElementById("hallBadge");
+
     if (hallBadge) {
       hallBadge.textContent = badgeText;
       hallBadge.classList.remove("locked");
@@ -221,6 +296,7 @@ function updateBadgeCollection(finalScore, badge) {
 }
 
 function updateBestRecord(finalScore, badge) {
+
   if (finalScore <= bestRecords[currentStage].score) {
     return;
   }
@@ -239,15 +315,17 @@ function updateBestRecord(finalScore, badge) {
       "🍜 ホール編<br>" +
       "最高：" + finalScore + "点 " + badge.shortBadge;
   }
-localStorage.setItem(
-  "bestRecords",
-  JSON.stringify(bestRecords)
-);
 
+  localStorage.setItem(
+    "bestRecords",
+    JSON.stringify(bestRecords)
+  );
 }
 
 function unlockHall() {
-  const hallButton = document.getElementById("hallButton");
+
+  const hallButton =
+    document.getElementById("hallButton");
 
   if (!hallButton) {
     return;
@@ -258,14 +336,22 @@ function unlockHall() {
   localStorage.setItem("hallUnlocked", "true");
 
   if (bestRecords.hall.score > 0) {
+
     hallButton.innerHTML =
       "🍜 ホール編<br>" +
-      "最高：" + bestRecords.hall.score + "点 " + bestRecords.hall.badge;
+      "最高：" +
+      bestRecords.hall.score +
+      "点 " +
+      bestRecords.hall.badge;
+
   } else {
+
     hallButton.innerHTML = "🍜 ホール編";
   }
 }
+
 function goTop() {
+
   document.getElementById("message").innerHTML =
     "のらやへようこそ！<br>" +
     "一緒にのらやを勉強しようね🐈‍⬛";
@@ -273,13 +359,16 @@ function goTop() {
   document.getElementById("quizArea").innerHTML = "";
 
   document.getElementById("topButtons").style.display = "block";
+
   document.getElementById("collectionArea").style.display = "none";
 
   changeNora(normalNora);
 }
 
 function showCollection() {
+
   document.getElementById("topButtons").style.display = "none";
+
   document.getElementById("quizArea").innerHTML = "";
 
   document.getElementById("message").innerHTML =
@@ -291,7 +380,9 @@ function showCollection() {
 }
 
 function hideCollection() {
+
   document.getElementById("collectionArea").style.display = "none";
+
   document.getElementById("topButtons").style.display = "block";
 
   document.getElementById("message").innerHTML =
@@ -300,7 +391,9 @@ function hideCollection() {
 
   changeNora(normalNora);
 }
+
 window.onload = function () {
+
   const hallUnlocked =
     localStorage.getItem("hallUnlocked");
 
@@ -309,8 +402,12 @@ window.onload = function () {
   }
 
   if (bestRecords.beginner.score > 0) {
+
     document.getElementById("beginnerButton").innerHTML =
       "🌱 はじめて編<br>" +
-      "最高：" + bestRecords.beginner.score + "点 " + bestRecords.beginner.badge;
+      "最高：" +
+      bestRecords.beginner.score +
+      "点 " +
+      bestRecords.beginner.badge;
   }
 };
