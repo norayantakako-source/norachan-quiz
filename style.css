@@ -1,0 +1,100 @@
+body {
+  margin: 0;
+  font-family: "Hiragino Maru Gothic ProN", sans-serif;
+  background: #fff6df;
+  color: #4a2f1b;
+  text-align: center;
+  font-size: 18px;
+}
+    .game {
+     max-width: 420px;
+     margin: 0 auto;
+     padding: 12px 18px;
+     min-height: 100vh;
+     box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .message {
+background: #fff;
+  border: 3px solid #d8a85f;
+  border-radius: 18px;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 20px;
+  line-height: 1.5;
+    }
+
+    .norachan {
+ width: 150px;
+  max-width: 65%;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s;
+    }
+
+    .norachan:active {
+      transform: scale(0.92);
+    }
+
+    .norachan.jump {
+      animation: jump 0.25s ease;
+    }
+
+    @keyframes jump {
+
+      0% {
+        transform: scale(1) translateY(0);
+      }
+
+      50% {
+        transform: scale(1.08) translateY(-12px);
+      }
+
+      100% {
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    button {
+      margin: 8px;
+      padding: 18px 24px;
+      border: none;
+      border-radius: 999px;
+      background: #d88b3d;
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 90%;
+      max-width: 320px;
+    }
+
+    button:disabled {
+      background: #b8b8b8;
+      cursor: not-allowed;
+    }
+
+    .collection {
+      margin-top: 28px;
+      background: #fff;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .item {
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 12px;
+      background: #f3ead8;
+      font-size: 20px;
+    }
+
+    .locked {
+      opacity: 0.4;
+    }
